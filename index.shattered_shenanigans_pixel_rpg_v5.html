@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Shattered Shenanigans — Pixel RPG</title>
+<style>
+:root{--bg:#11182d;--panel:#202b49;--panel2:#2d3b60;--ink:#f8efc9;--muted:#b9c6dc;--edge:#080d1b;--gold:#ffd75e;--green:#7fd18a;--red:#ff7272;--blue:#75d9f4;--shadow:#060a14}
+*{box-sizing:border-box;image-rendering:pixelated}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-monospace,Consolas,monospace}
+body.light{--bg:#e8dfb7;--panel:#fff0c4;--panel2:#e5d39a;--ink:#202b49;--muted:#4b5870;--edge:#283450;--gold:#bd761b;--green:#287c49;--red:#bc3e4d;--blue:#187da3;--shadow:#8e825e}
+button{font:inherit;cursor:pointer;color:inherit}
+button:focus-visible{outline:3px dashed var(--gold);outline-offset:3px}
+.screen{display:none;min-height:100svh}
+.screen.active{display:flex}
+.pixel-frame{border:4px solid var(--edge);box-shadow:6px 6px 0 var(--shadow);background:var(--panel)}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;background:var(--panel2);border-bottom:4px solid var(--edge)}
+.brand{font-size:clamp(15px,2.8vw,23px);font-weight:1000;letter-spacing:1px;text-shadow:2px 2px var(--shadow)}
+.tag{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:1px}
+.pixel-btn{border:3px solid var(--edge);background:var(--panel2);padding:11px 13px;box-shadow:3px 3px 0 var(--shadow);font-weight:900;text-align:center}
+.pixel-btn:hover:not(:disabled){filter:brightness(1.12);transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--shadow)}
+.pixel-btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
+.pixel-btn.primary{background:var(--gold);color:#20233a}
+.pixel-btn:disabled{opacity:.45;cursor:not-allowed}
+.content{width:min(100%,1000px);margin:auto;padding:20px}
+.center-screen{align-items:center;justify-content:center;padding:20px;background-image:linear-gradient(90deg,#ffffff05 50%,transparent 50%),linear-gradient(#ffffff05 50%,transparent 50%);background-size:8px 8px}
+.title{font-size:clamp(28px,6vw,52px);line-height:1.15;margin:0;text-shadow:4px 4px var(--shadow);letter-spacing:1px}
+.subtitle{color:var(--muted);line-height:1.7;max-width:620px}
+.language-card{width:min(650px,100%);padding:clamp(22px,5vw,46px);text-align:center}
+.pixel-mark{font-size:52px;color:var(--gold);margin-bottom:12px;text-shadow:4px 4px var(--shadow)}
+.language-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:26px}
+.language-options button{min-height:74px;font-size:clamp(15px,3vw,19px)}
+.menu-screen{flex-direction:column;position:relative;isolation:isolate;overflow:hidden;background:#273b4b}
+.menu-screen>*{position:relative;z-index:2}
+.menu-scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;background:linear-gradient(180deg,#11182d22,#11182d66);padding:clamp(14px,4vw,32px)}
+/* Rich, layered pixel-art landscapes behind the main menu */
+.menu-screen:before,.menu-screen:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;transition:background 1s ease}
+.menu-screen:before{background-color:#77c8e4;background-image:
+  radial-gradient(circle at 78% 13%,#fff1a6 0 19px,transparent 20px),
+  linear-gradient(90deg,transparent 0 8%,#ffffff26 8% 8.4%,transparent 8.4% 18%,#ffffff22 18% 18.4%,transparent 18.4%),
+  linear-gradient(180deg,transparent 0 38%,#a8d99a 38% 43%,#72b66e 43% 51%,#477f57 51% 63%,#345b4c 63% 100%),
+  linear-gradient(135deg,transparent 0 35%,#679b69 35% 42%,transparent 42%),
+  linear-gradient(45deg,transparent 0 43%,#4f895e 43% 50%,transparent 50%);
+ background-size:100% 100%;}
+.menu-screen:after{opacity:.95;background-image:
+  radial-gradient(circle at 8% 73%,#fff0a0 0 4px,transparent 5px),radial-gradient(circle at 12% 79%,#ed9bc2 0 4px,transparent 5px),radial-gradient(circle at 22% 70%,#f9e9a2 0 4px,transparent 5px),radial-gradient(circle at 31% 82%,#f0a1c8 0 4px,transparent 5px),radial-gradient(circle at 45% 75%,#fff0a0 0 4px,transparent 5px),radial-gradient(circle at 60% 82%,#f0a1c8 0 4px,transparent 5px),radial-gradient(circle at 72% 72%,#fff0a0 0 4px,transparent 5px),radial-gradient(circle at 87% 80%,#f0a1c8 0 4px,transparent 5px),
+  repeating-linear-gradient(90deg,transparent 0 31px,#172c3a12 31px 32px),repeating-linear-gradient(0deg,transparent 0 31px,#172c3a12 31px 32px);}
+.menu-screen.scene-flowers:before{background-color:#77c8e4;background-image:radial-gradient(circle at 78% 13%,#fff1a6 0 19px,transparent 20px),linear-gradient(180deg,transparent 0 37%,#d0eaa7 37% 42%,#87c675 42% 51%,#568f59 51% 63%,#345b4c 63% 100%),linear-gradient(135deg,transparent 0 35%,#72a96c 35% 43%,transparent 43%),linear-gradient(45deg,transparent 0 43%,#528a5d 43% 51%,transparent 51%)}
+.menu-screen.scene-lava:before{background-color:#39273d;background-image:radial-gradient(circle at 77% 14%,#ffd16a 0 13px,transparent 14px),linear-gradient(180deg,transparent 0 40%,#e97d4b 40% 45%,#6f3b40 45% 58%,#3b2a3b 58% 100%),linear-gradient(160deg,transparent 0 30%,#35293c 30% 42%,transparent 42%),linear-gradient(200deg,transparent 0 26%,#563344 26% 40%,transparent 40%),linear-gradient(90deg,transparent 0 12%,#2b2537 12% 23%,transparent 23% 33%,#2b2537 33% 40%,transparent 40% 65%,#2b2537 65% 74%,transparent 74%),linear-gradient(180deg,transparent 0 76%,#f7a34b 76% 79%,#702e38 79% 100%)}
+.menu-screen.scene-lava:after{background-image:linear-gradient(160deg,transparent 0 39%,#f6a34a 39% 41%,transparent 41%),linear-gradient(90deg,transparent 0 16%,#f2a04a 16% 17%,transparent 17% 52%,#ffca65 52% 53%,transparent 53% 83%,#f2a04a 83% 84%,transparent 84%),repeating-linear-gradient(90deg,transparent 0 44px,#151d2d66 44px 48px),linear-gradient(180deg,transparent 0 86%,#f18b3c 86% 88%,#a43d39 88% 100%)}
+.menu-screen.scene-snow:before{background-color:#a7d9ef;background-image:radial-gradient(circle at 79% 12%,#f8ffff 0 15px,transparent 16px),linear-gradient(180deg,transparent 0 42%,#eef8fb 42% 47%,#c7e4ef 47% 57%,#94bacb 57% 68%,#d8edf4 68% 100%),linear-gradient(135deg,transparent 0 26%,#f3fbff 26% 35%,transparent 35%),linear-gradient(45deg,transparent 0 34%,#d5edf5 34% 43%,transparent 43%),linear-gradient(135deg,transparent 0 56%,#f4fbff 56% 66%,transparent 66%)}
+.menu-screen.scene-snow:after{background-image:linear-gradient(90deg,transparent 0 9%,#567b8b 9% 10%,transparent 10% 15%,#567b8b 15% 16%,transparent 16% 85%,#567b8b 85% 86%,transparent 86%),linear-gradient(135deg,transparent 0 28%,#ffffffbb 28% 29%,transparent 29% 62%,#ffffffbb 62% 63%,transparent 63%),repeating-linear-gradient(0deg,transparent 0 38px,#ffffff22 38px 40px)}
+.menu-screen.scene-coliseum:before{background-color:#edb56e;background-image:radial-gradient(circle at 82% 14%,#ffe0a0 0 16px,transparent 17px),linear-gradient(180deg,transparent 0 48%,#d6a06b 48% 53%,#9c6949 53% 64%,#6f4b42 64% 100%),linear-gradient(90deg,transparent 0 9%,#e3b77b 9% 12%,#a66f4c 12% 14%,#e3b77b 14% 17%,transparent 17% 24%,#e3b77b 24% 27%,#a66f4c 27% 29%,#e3b77b 29% 32%,transparent 32% 41%,#e3b77b 41% 44%,#a66f4c 44% 46%,#e3b77b 46% 49%,transparent 49% 58%,#e3b77b 58% 61%,#a66f4c 61% 63%,#e3b77b 63% 66%,transparent 66% 75%,#e3b77b 75% 78%,#a66f4c 78% 80%,#e3b77b 80% 83%,transparent 83%)}
+.menu-screen.scene-coliseum:after{background-image:linear-gradient(180deg,transparent 0 45%,#f0ca8b 45% 47%,#875a42 47% 49%,transparent 49%),repeating-linear-gradient(90deg,transparent 0 42px,#8c5d43 42px 46px),linear-gradient(180deg,transparent 0 83%,#ba8256 83% 85%,#81543e 85% 100%)}
+.menu-screen.scene-forest:before{background-color:#263d4b;background-image:radial-gradient(ellipse at 20% 28%,#264a3b 0 9%,transparent 9.5%),radial-gradient(ellipse at 31% 24%,#315a43 0 13%,transparent 13.5%),radial-gradient(ellipse at 73% 27%,#254638 0 13%,transparent 13.5%),radial-gradient(ellipse at 87% 32%,#31533e 0 11%,transparent 11.5%),linear-gradient(180deg,transparent 0 47%,#395849 47% 56%,#1d3d33 56% 100%),linear-gradient(90deg,#192e2c 0 7%,transparent 7% 18%,#1b332f 18% 22%,transparent 22% 76%,#192e2c 76% 82%,transparent 82% 93%,#192e2c 93% 100%)}
+.menu-screen.scene-forest:after{background-image:linear-gradient(90deg,transparent 0 14%,#162b28 14% 17%,transparent 17% 28%,#1a302b 28% 30%,transparent 30% 69%,#142925 69% 72%,transparent 72% 85%,#172b28 85% 89%,transparent 89%),radial-gradient(circle at 47% 56%,#d4c98b 0 2px,transparent 3px),radial-gradient(circle at 51% 62%,#d4c98b 0 2px,transparent 3px)}
+.menu-screen.scene-haunted:before{background-color:#111426;background-image:radial-gradient(circle at 78% 12%,#b5a3d2 0 12px,transparent 13px),linear-gradient(180deg,transparent 0 42%,#343047 42% 50%,#1c2032 50% 66%,#111522 66% 100%),linear-gradient(135deg,transparent 0 31%,#24253b 31% 42%,transparent 42%),linear-gradient(45deg,transparent 0 39%,#1d2035 39% 49%,transparent 49%),linear-gradient(90deg,#0d1120 0 12%,transparent 12% 22%,#0d1120 22% 26%,transparent 26% 71%,#0d1120 71% 76%,transparent 76% 88%,#0d1120 88% 100%)}
+.menu-screen.scene-haunted:after{background-image:radial-gradient(circle at 22% 48%,#8f78b7 0 3px,transparent 4px),radial-gradient(circle at 77% 43%,#8f78b7 0 3px,transparent 4px),linear-gradient(180deg,transparent 0 86%,#080b15 86% 100%),repeating-linear-gradient(90deg,transparent 0 32px,#080b1533 32px 34px)}
+.menu-tile{background:color-mix(in srgb,var(--panel) 94%,transparent);backdrop-filter:blur(1px)}
+
+.menu-inner{max-width:900px;margin:auto}
+.menu-heading{text-align:center;padding:12px 0 24px}
+.menu-heading .subtitle{margin:12px auto}
+.menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.menu-tile{min-height:140px;position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;text-align:left;padding:16px;background:var(--panel);border:4px solid var(--edge);box-shadow:5px 5px 0 var(--shadow);overflow:hidden}
+.menu-tile .tile-icon{font-size:29px;line-height:1.2;filter:none}
+.menu-tile .tile-name{font-size:clamp(16px,3vw,22px);font-weight:1000}
+.menu-tile .tile-desc{font-size:11px;color:var(--muted);line-height:1.5;margin-top:6px}
+.menu-tile.locked{background:repeating-linear-gradient(135deg,var(--panel) 0 10px,var(--panel2) 10px 20px);opacity:.7;cursor:not-allowed}
+.lock-label{position:absolute;top:10px;right:10px;border:2px solid var(--edge);background:var(--edge);padding:4px 6px;font-size:10px;color:#fff}
+.menu-tile.available{border-color:var(--gold)}
+.menu-tile.available:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--shadow)}
+.footer-note{text-align:center;color:#d6e8d4;font-size:10px;padding:24px 0 8px;letter-spacing:1px}
+.subscreen{flex-direction:column}
+.subcontent{width:min(900px,100%);margin:0 auto;padding:20px;flex:1;overflow-y:auto}
+.back-row{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.section-title{font-size:clamp(22px,4vw,32px);margin:0}
+.info-grid{display:grid;grid-template-columns:1fr;gap:14px}
+.info-box{padding:17px;border:4px solid var(--edge);background:var(--panel);box-shadow:4px 4px 0 var(--shadow)}
+.info-box h3{margin:0 0 12px;color:var(--gold);font-size:17px}
+.info-box p,.info-box li{color:var(--muted);font-size:13px;line-height:1.8}
+.inline-options{display:flex;gap:10px;flex-wrap:wrap}
+.inline-options .pixel-btn{min-width:120px}
+.selected{outline:3px solid var(--gold);outline-offset:1px}
+.guide-list{padding-left:20px;margin-bottom:0}
+.style-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:20px}
+.style-card{padding:12px;background:var(--panel);border:4px solid var(--edge);box-shadow:5px 5px 0 var(--shadow);text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+.style-card:hover{border-color:var(--gold);transform:translate(-2px,-2px)}
+.sprite-preview{width:100%;height:180px;display:grid;place-items:center;background:#7bb6b6;border:3px solid var(--edge);overflow:hidden}
+.sprite-preview svg{height:160px;width:110px;shape-rendering:crispEdges}
+.style-card h3{margin:5px 0 0;font-size:18px}.style-card p{font-size:11px;color:var(--muted);line-height:1.6;margin:0}
+.battle-screen{flex-direction:column}
+.battle-main{width:min(1180px,100%);margin:0 auto;padding:14px;flex:1}
+.battlefield{height:clamp(270px,48vh,440px);position:relative;overflow:hidden;border:4px solid var(--edge);background:#86c7d6;box-shadow:5px 5px 0 var(--shadow);isolation:isolate}
+.scene-sky,.scene-hills,.scene-ground,.scene-details{position:absolute;inset:0;pointer-events:none;transition:filter .7s}
+.scene-sky{z-index:-4;background:linear-gradient(#75c9e8 0 58%,#c5e7c2 58% 72%,#5a9d55 72%)}
+.scene-hills{z-index:-3;bottom:22%;inset:auto 0 22%;height:70%;background:#5c9b68;clip-path:polygon(0 100%,0 54%,10% 37%,17% 57%,29% 16%,43% 61%,55% 30%,66% 60%,78% 10%,100% 54%,100% 100%)}
+.scene-ground{z-index:-2;top:auto;height:27%;background:repeating-linear-gradient(90deg,#4c9149 0 12px,#397d3c 12px 24px);border-top:5px solid #326d3a}
+.scene-details{z-index:-1}
+.scene-details:before,.scene-details:after{content:"";position:absolute;display:block;image-rendering:pixelated}
+.battlefield.scene-flowers .scene-sky{background:linear-gradient(#78c9e7 0 55%,#d2efb2 55% 73%,#62a653 73%)}
+.battlefield.scene-flowers .scene-hills{background:#58935e;filter:drop-shadow(0 -9px #80b86b)}
+.battlefield.scene-flowers .scene-details:before{left:0;right:0;bottom:22%;height:20%;background:radial-gradient(circle at 8% 80%,#ffe48c 0 4px,transparent 5px),radial-gradient(circle at 18% 55%,#f58fbb 0 4px,transparent 5px),radial-gradient(circle at 31% 80%,#fff1a6 0 4px,transparent 5px),radial-gradient(circle at 44% 65%,#e58ac4 0 4px,transparent 5px),radial-gradient(circle at 59% 80%,#ffe48c 0 4px,transparent 5px),radial-gradient(circle at 72% 58%,#fff1a6 0 4px,transparent 5px),radial-gradient(circle at 88% 75%,#f58fbb 0 4px,transparent 5px)}
+.battlefield.scene-flowers .scene-details:after{right:10%;top:10%;width:28px;height:28px;background:#ffe994;box-shadow:0 0 0 5px #ffe99444}
+.battlefield.scene-lava .scene-sky{background:linear-gradient(#5c344c 0 45%,#b94e3a 60%,#f28a42 78%,#522b35 78%)}
+.battlefield.scene-lava .scene-hills{background:#392b3d;clip-path:polygon(0 100%,0 70%,12% 55%,24% 66%,35% 5%,43% 52%,51% 66%,66% 18%,74% 57%,87% 34%,100% 63%,100% 100%)}
+.battlefield.scene-lava .scene-details:before{left:28%;top:12%;width:20%;height:32%;background:#f7b04b;clip-path:polygon(50% 0,62% 45%,100% 100%,0 100%,38% 45%);filter:drop-shadow(0 0 0 #ffcf65)}
+.battlefield.scene-lava .scene-ground{background:repeating-linear-gradient(90deg,#682f35 0 14px,#8f3b36 14px 28px);border-color:#f0783f}
+.battlefield.scene-lava .scene-details:after{left:0;right:0;bottom:15%;height:5%;background:repeating-linear-gradient(90deg,#ff9c3e 0 20px,#f6d15a 20px 25px,#8b3334 25px 44px)}
+.battlefield.scene-snow .scene-sky{background:linear-gradient(#9ed9ef 0 55%,#d7e9f4 55% 72%,#9ebfd0 72%)}
+.battlefield.scene-snow .scene-hills{background:#eaf6fb;clip-path:polygon(0 100%,0 65%,14% 28%,24% 63%,41% 0,54% 60%,70% 18%,85% 58%,100% 35%,100% 100%)}
+.battlefield.scene-snow .scene-details:before{left:0;right:0;top:20%;height:4px;background:repeating-linear-gradient(90deg,transparent 0 7%,#fff 7% 8%,transparent 8% 15%);opacity:.9}
+.battlefield.scene-snow .scene-ground{background:repeating-linear-gradient(90deg,#c4e0eb 0 14px,#a9cfdf 14px 28px);border-color:#effaff}
+.battlefield.scene-coliseum .scene-sky{background:linear-gradient(#edb56e 0 57%,#c98954 57% 72%,#9b694a 72%)}
+.battlefield.scene-coliseum .scene-hills{background:#bd895a;clip-path:polygon(0 100%,0 30%,8% 30%,8% 18%,13% 18%,13% 30%,24% 30%,24% 18%,29% 18%,29% 30%,40% 30%,40% 18%,45% 18%,45% 30%,56% 30%,56% 18%,61% 18%,61% 30%,72% 30%,72% 18%,77% 18%,77% 30%,88% 30%,88% 18%,93% 18%,93% 30%,100% 30%,100% 100%)}
+.battlefield.scene-coliseum .scene-details:before{left:10%;right:10%;top:25%;height:30%;border:8px solid #e6b778;background:repeating-linear-gradient(90deg,#b77a4d 0 22px,#e4b273 22px 30px);box-shadow:inset 0 0 0 6px #89573e}
+.battlefield.scene-coliseum .scene-ground{background:repeating-linear-gradient(90deg,#b17a4f 0 16px,#9c6944 16px 32px);border-color:#805037}
+.battlefield.scene-forest .scene-sky{background:linear-gradient(#243c4a 0 56%,#3b5549 56% 73%,#1c392f 73%)}
+.battlefield.scene-forest .scene-hills{background:#284a3a;clip-path:polygon(0 100%,0 30%,9% 30%,9% 0,18% 0,18% 30%,29% 30%,29% 8%,38% 8%,38% 30%,51% 30%,51% 0,61% 0,61% 30%,72% 30%,72% 7%,81% 7%,81% 30%,100% 30%,100% 100%)}
+.battlefield.scene-forest .scene-details:before{inset:0 0 22%;background:radial-gradient(ellipse at 18% 28%,#182e2c 0 9%,transparent 9.5%),radial-gradient(ellipse at 30% 35%,#1b3a31 0 12%,transparent 12.5%),radial-gradient(ellipse at 70% 28%,#172d2b 0 12%,transparent 12.5%),radial-gradient(ellipse at 84% 32%,#1b3a31 0 10%,transparent 10.5%)}
+.battlefield.scene-forest .scene-ground{background:repeating-linear-gradient(90deg,#1d4033 0 14px,#254b38 14px 28px);border-color:#172e27}
+.battlefield.scene-haunted .scene-sky{background:linear-gradient(#111528 0 48%,#27233c 67%,#171b2a 73%)}
+.battlefield.scene-haunted .scene-hills{background:#171a2a;clip-path:polygon(0 100%,0 70%,12% 52%,20% 67%,31% 20%,39% 62%,51% 8%,60% 65%,73% 29%,84% 60%,100% 45%,100% 100%)}
+.battlefield.scene-haunted .scene-details:before{inset:0 0 20%;background:radial-gradient(circle at 22% 33%,#7a5c9e 0 3px,transparent 4px),radial-gradient(circle at 76% 25%,#7a5c9e 0 4px,transparent 5px),linear-gradient(90deg,transparent 10%,#101421 10% 12%,transparent 12% 88%,#101421 88% 90%,transparent 90%);opacity:.8}
+.battlefield.scene-haunted .scene-ground{background:repeating-linear-gradient(90deg,#171b2b 0 14px,#22243a 14px 28px);border-color:#111322}
+.battler{position:absolute;bottom:7%;height:62%;width:23%;display:flex;align-items:end;justify-content:center;transition:transform .25s;z-index:2}
+.battler.player{left:8%}.battler.enemy{right:8%;transform:scaleX(-1)}
+.battler svg{height:100%;max-width:100%;width:auto;filter:drop-shadow(4px 4px 0 #11182788);shape-rendering:crispEdges}
+.battler .label{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);white-space:nowrap;background:#fff0bd;color:#202b49;border:3px solid #202b49;padding:4px 7px;font-size:9px;font-weight:1000}
+.battler.enemy .label{transform:translateX(-50%) scaleX(-1)}
+.status-top{color:var(--ink);text-shadow:none}
+.status-top span{color:var(--ink)}
+.battler.hit{animation:hit .28s steps(2)}
+@keyframes hit{50%{transform:translateX(12px) translateY(-5px)}}
+@keyframes hitEnemy{50%{transform:scaleX(-1) translateX(12px) translateY(-5px)}}
+.battler.enemy.hit{animation:hitEnemy .28s steps(2)}
+.projectile{position:absolute;z-index:4;left:18%;top:45%;font-size:42px;animation:shot .7s steps(7) forwards}
+@keyframes shot{to{left:78%;transform:rotate(360deg);opacity:.2}}
+.hud{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.status{background:var(--panel);border:4px solid var(--edge);box-shadow:4px 4px 0 var(--shadow);padding:10px}
+.status-top{display:flex;justify-content:space-between;gap:5px;font-size:11px;font-weight:1000;flex-wrap:wrap}
+.bar{height:12px;border:3px solid var(--edge);background:#5c6071;margin:6px 0 9px}
+.fill{height:100%;width:100%;transition:width .2s steps(5)}
+.hp{background:repeating-linear-gradient(90deg,#ff626e 0 9px,#df4858 9px 13px)}
+.stamina{background:repeating-linear-gradient(90deg,#70e1ef 0 9px,#379cc9 9px 13px)}
+.battle-panel{margin-top:14px;padding:14px;border:4px solid var(--edge);background:var(--panel);box-shadow:4px 4px 0 var(--shadow)}
+.turnline{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-weight:1000;margin-bottom:12px}
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.action{background:var(--panel2);border:3px solid var(--edge);box-shadow:3px 3px 0 var(--shadow);padding:10px;text-align:left;font-weight:1000;font-size:12px}
+.action small{display:block;font-size:10px;color:var(--muted);font-weight:500;margin-top:5px}
+.action:disabled{opacity:.4;cursor:not-allowed}
+.log{margin-top:12px;min-height:40px;font-size:12px;color:var(--muted);line-height:1.7}
+.result{display:none;color:var(--gold);font-weight:1000;padding-top:8px}
+.battle-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+@media(min-width:700px){.info-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.info-box.guide{grid-column:1/-1}.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.menu-tile{min-height:160px}.battle-main{padding:16px}.actions{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.rotate-prompt{display:none}
+@media(orientation:landscape){.battlefield{height:clamp(190px,48vh,360px)}.battler{height:61%;width:20%;bottom:7%}.battler.player{left:12%}.battler.enemy{right:12%}.battle-main{padding:10px 18px}.hud{margin-top:9px}.battle-panel{margin-top:9px;padding:10px}.battlefield .label{font-size:8px}}
+@media(max-width:430px){.battle-main{padding:8px}.battlefield{height:clamp(230px,38vh,320px)}.battler{height:58%;width:25%}.battler.player{left:5%}.battler.enemy{right:5%}.menu-grid{grid-template-columns:1fr}.menu-tile{min-height:112px}.style-grid{gap:10px}.sprite-preview{height:145px}.sprite-preview svg{height:130px}.status{padding:7px}.status-top{font-size:10px}.battle-main{padding:9px}.battlefield{height:290px}}
+</style></head>
+<body>
+<!-- FIRST SCREEN: LANGUAGE ONLY -->
+<section id="languageScreen" class="screen center-screen active">
+ <div class="pixel-frame language-card">
+  <div class="pixel-mark">▣ ▣ ▣</div>
+  <h1 class="title">SHATTERED<br>SHENANIGANS</h1>
+  <p class="subtitle" id="langPrompt">Elige el idioma para comenzar / Choose your language to begin</p>
+  <div class="language-options">
+   <button class="pixel-btn primary" onclick="chooseLanguage('es')">🇪🇸 ESPAÑOL</button>
+   <button class="pixel-btn primary" onclick="chooseLanguage('en')">🇬🇧 ENGLISH</button>
+  </div>
+  <p class="tag" style="margin-top:24px">A PIXEL ART RPG</p>
+ </div>
+</section>
+<!-- MAIN MENU -->
+<section id="menuScreen" class="screen menu-screen">
+ <header class="topbar"><div><div class="brand">▣ SHATTERED SHENANIGANS</div><div class="tag">PIXEL ART RPG · <span id="menuLanguage">ESPAÑOL</span></div></div><div style="font-size:22px">✦</div></header>
+ <div class="menu-scroll"><div class="menu-inner">
+  <div class="menu-heading"><h1 class="title" id="menuTitle">MENÚ PRINCIPAL</h1><p class="subtitle" id="menuSubtitle">Elige tu camino, aventurero.</p></div>
+  <div class="menu-grid">
+   <button class="menu-tile locked" disabled><span class="lock-label" id="storyLock">🔒 BLOQUEADO</span><span class="tile-icon">📜</span><span><span class="tile-name" id="storyName">Historia</span><span class="tile-desc" id="storyDesc">La aventura todavía no está disponible.</span></span></button>
+   <button class="menu-tile locked" disabled><span class="lock-label" id="invLock">🔒 BLOQUEADO</span><span class="tile-icon">🎒</span><span><span class="tile-name" id="invName">Inventario</span><span class="tile-desc" id="invDesc">Tus objetos aparecerán aquí.</span></span></button>
+   <button class="menu-tile locked" disabled><span class="lock-label" id="modesLock">🔒 BLOQUEADO</span><span class="tile-icon">⚔️</span><span><span class="tile-name" id="modesName">Modos de juego</span><span class="tile-desc" id="modesDesc">Más modos llegarán próximamente.</span></span></button>
+   <button class="menu-tile available" onclick="showScreen('practiceScreen')"><span class="tile-icon">⚔</span><span><span class="tile-name" id="practiceName">Modo de Práctica</span><span class="tile-desc" id="practiceDesc">Entrena contra la IA y prueba tus habilidades.</span></span></button>
+   <button class="menu-tile available" onclick="openInfo()"><span class="tile-icon">ℹ</span><span><span class="tile-name" id="infoName">Información</span><span class="tile-desc" id="infoDesc">Ajustes, idioma y guía de combate.</span></span></button>
+  </div>
+  <div class="footer-note" id="menuFooter">EXPLORA · ENTRENA · HAZTE MÁS FUERTE</div>
+ </div></div>
+</section>
+<!-- INFO -->
+<section id="infoScreen" class="screen subscreen">
+ <header class="topbar"><div><div class="brand">SHATTERED SHENANIGANS</div><div class="tag" id="infoTag">INFORMACIÓN</div></div><button class="pixel-btn" onclick="showScreen('menuScreen')" id="infoBackTop">← VOLVER</button></header>
+ <div class="subcontent">
+  <div class="back-row"><h2 class="section-title" id="infoHeading">Información</h2></div>
+  <div class="info-grid">
+   <div class="info-box"><h3 id="themeTitle">☼ Apariencia</h3><p id="themeText">Elige el aspecto del juego.</p><div class="inline-options"><button class="pixel-btn" id="darkBtn" onclick="setTheme('dark')">🌙 Modo oscuro</button><button class="pixel-btn" id="lightBtn" onclick="setTheme('light')">☀ Modo claro</button></div></div>
+   <div class="info-box"><h3 id="languageTitle">文 Idioma</h3><p id="languageText">Puedes cambiar el idioma cuando quieras.</p><div class="inline-options"><button class="pixel-btn" id="esBtn" onclick="setLanguage('es')">🇪🇸 Español</button><button class="pixel-btn" id="enBtn" onclick="setLanguage('en')">🇬🇧 English</button></div></div>
+   <div class="info-box guide"><h3 id="guideTitle">⚔ Mini guía del combate</h3><ul class="guide-list" id="guideList"><li>Elige una habilidad durante tu turno.</li><li>Cada habilidad consume stamina.</li><li>La stamina se recupera al terminar el turno.</li><li>Reduce los HP del rival a cero para ganar.</li></ul></div>
+  </div>
+  <p style="text-align:center;margin-top:25px"><button class="pixel-btn primary" onclick="showScreen('menuScreen')" id="infoBack">VOLVER AL MENÚ</button></p>
+ </div>
+</section>
+<!-- PRACTICE STYLE SELECT -->
+<section id="practiceScreen" class="screen subscreen">
+ <header class="topbar"><div><div class="brand">SHATTERED SHENANIGANS</div><div class="tag" id="practiceTag">MODO DE PRÁCTICA</div></div><button class="pixel-btn" onclick="showScreen('menuScreen')" id="practiceBack">← VOLVER</button></header>
+ <div class="subcontent">
+  <h2 class="section-title" id="chooseStyleTitle">Elige tu estilo de combate</h2><p class="subtitle" id="chooseStyleDesc">Selecciona a tu personaje. El otro estilo será controlado por la IA.</p>
+  <div class="style-grid">
+   <button class="style-card" onclick="startBattle('Windment')"><div class="sprite-preview" id="windPreview"></div><h3>WINDMENT</h3><p id="windDesc">Guerrera del viento · abanico glacial</p><span class="pixel-btn primary" id="chooseWind">ELEGIR</span></button>
+   <button class="style-card" onclick="startBattle('Fighter')"><div class="sprite-preview" id="fighterPreview"></div><h3>FIGHTER</h3><p id="fighterDesc">Luchador ninja · puños y fuerza</p><span class="pixel-btn primary" id="chooseFighter">ELEGIR</span></button>
+  </div>
+ </div>
+</section>
+<!-- BATTLE -->
+<section id="battleScreen" class="screen battle-screen">
+ <header class="topbar"><div><div class="brand">SHATTERED SHENANIGANS</div><div class="tag" id="battleTag">MODO DE PRÁCTICA · COMBATE</div></div><button class="pixel-btn" onclick="showScreen('practiceScreen')" id="leaveBattle">SALIR</button></header>
+ <main class="battle-main">
+  <div class="battlefield scene-flowers" id="battlefield" aria-label="Pixel-art battle backgrounds"><div class="scene-sky"></div><div class="scene-hills"></div><div class="scene-ground"></div><div class="scene-details"></div>
+   <div class="battler player" id="playerSprite"><div class="label" id="playerLabel">WINDMENT</div></div>
+   <div class="battler enemy" id="enemySprite"><div class="label" id="enemyLabel">FIGHTER · IA</div></div>
+  </div>
+  <div class="hud">
+   <div class="status"><div class="status-top"><span id="playerName">TÚ · WINDMENT</span><span id="playerHpText">150/150 HP</span></div><div class="bar"><div class="fill hp" id="playerHpBar"></div></div><div class="status-top"><span id="staminaLabel">STAMINA</span><span id="playerStText">3/3</span></div><div class="bar"><div class="fill stamina" id="playerStBar"></div></div></div>
+   <div class="status"><div class="status-top"><span id="enemyName">IA · FIGHTER</span><span id="enemyHpText">150/150 HP</span></div><div class="bar"><div class="fill hp" id="enemyHpBar"></div></div><div class="status-top"><span id="enemyStaminaLabel">STAMINA</span><span id="enemyStText">6/6</span></div><div class="bar"><div class="fill stamina" id="enemyStBar"></div></div></div>
+  </div>
+  <div class="battle-panel"><div class="turnline"><span id="turnText">TU TURNO</span><span id="battleHint">Elige una habilidad</span></div><div class="actions" id="actionButtons"></div><div class="log" id="battleLog">¡El combate comienza!</div><div class="result" id="battleResult"></div><div class="battle-actions"><button class="pixel-btn" onclick="resetBattle()" id="restartBtn">↻ REINICIAR</button><button class="pixel-btn primary" onclick="showScreen('practiceScreen')" id="backStylesBtn">CAMBIAR ESTILO</button><button class="pixel-btn" onclick="showScreen('menuScreen')" id="battleMenuBtn">MENÚ PRINCIPAL</button></div></div>
+ </main>
+</section>
+<script>
+const TEXT={
+es:{
+menuTitle:'MENÚ PRINCIPAL',menuSubtitle:'Elige tu camino, aventurero.',story:'Historia',inventory:'Inventario',modes:'Modos de juego',locked:'🔒 BLOQUEADO',storyDesc:'La aventura todavía no está disponible.',invDesc:'Tus objetos aparecerán aquí.',modesDesc:'Más modos llegarán próximamente.',practice:'Modo de Práctica',practiceDesc:'Entrena contra la IA y prueba tus habilidades.',info:'Información',infoDesc:'Ajustes, idioma y guía de combate.',footer:'EXPLORA · ENTRENA · HAZTE MÁS FUERTE',
+back:'← VOLVER',backMenu:'VOLVER AL MENÚ',infoTag:'INFORMACIÓN',theme:'☼ Apariencia',themeText:'Elige el aspecto del juego.',dark:'🌙 Modo oscuro',light:'☀ Modo claro',language:'文 Idioma',languageText:'Puedes cambiar el idioma cuando quieras.',guide:'⚔ Mini guía del combate',guideItems:['Los combates se juegan por turnos: elige una acción cuando sea tu turno.','Cada estilo tiene su propia capacidad y recarga de stamina; se recupera al terminar los turnos.','Algunos estilos podrán provocar anomalías elementales. Todavía no hay ninguna disponible.','Reduce los HP del rival a cero para ganar. La IA juega automáticamente.'],
+practiceTag:'MODO DE PRÁCTICA',chooseStyle:'Elige tu estilo de combate',chooseStyleDesc:'Selecciona a tu personaje. El otro estilo será controlado por la IA.',windDesc:'Guerrera del viento · abanico glacial',fighterDesc:'Luchador ninja · puños y fuerza',choose:'ELEGIR',
+battleTag:'MODO DE PRÁCTICA · COMBATE',leave:'SALIR',you:'TÚ',ai:'IA',stamina:'STAMINA',yourTurn:'TU TURNO',aiTurn:'TURNO DE LA IA',hint:'Elige una habilidad',begin:'¡El combate comienza! Elige una habilidad.',damage:'de daño',activated:'activado',counter:'¡Freeze Counter! La ofensiva queda castigada.',win:'🏆 ¡VICTORIA! Has ganado el combate.',lose:'💫 DERROTA · La IA ha ganado.',restart:'↻ REINICIAR',changeStyle:'CAMBIAR ESTILO',battleMenu:'MENÚ PRINCIPAL',
+skills:{'Lusas Aéreas':'Lusas Aéreas','Onda Helada':'Onda Helada','Lanza Glacial':'Lanza Glacial','Freeze Counter':'Freeze Counter','Puño':'Puño','Fisiochoque':'Fisiochoque','Concentración':'Concentración','Golpe de Gracia':'Golpe de Gracia'},
+desc:{'Lusas Aéreas':'20 de daño','Onda Helada':'25 de daño','Lanza Glacial':'35 de daño','Freeze Counter':'Contraataque preparado','Puño':'10 de daño','Fisiochoque':'15 de daño + potencia','Concentración':'Bloquea 15 de daño','Golpe de Gracia':'30 de daño · rival ≤30 HP'}
+},
+en:{
+menuTitle:'MAIN MENU',menuSubtitle:'Choose your path, adventurer.',story:'Story',inventory:'Inventory',modes:'Game Modes',locked:'🔒 LOCKED',storyDesc:'The adventure is not available yet.',invDesc:'Your items will appear here.',modesDesc:'More modes are coming soon.',practice:'Practice Mode',practiceDesc:'Train against the AI and test your skills.',info:'Information',infoDesc:'Settings, language and combat guide.',footer:'EXPLORE · TRAIN · GROW STRONGER',
+back:'← BACK',backMenu:'BACK TO MENU',infoTag:'INFORMATION',theme:'☼ Appearance',themeText:'Choose the game appearance.',dark:'🌙 Dark mode',light:'☀ Light mode',language:'文 Language',languageText:'You can change the language any time.',guide:'⚔ Mini combat guide',guideItems:['Combat is turn-based: choose an action when it is your turn.','Each style has its own stamina capacity and recharge rate; stamina recovers at the end of turns.','Some styles will be able to inflict elemental anomalies. None are available yet.','Reduce the enemy HP to zero to win. The AI takes its turns automatically.'],
+practiceTag:'PRACTICE MODE',chooseStyle:'Choose your fighting style',chooseStyleDesc:'Select your character. The other style will be controlled by the AI.',windDesc:'Wind warrior · glacial fan',fighterDesc:'Ninja fighter · fists and strength',choose:'CHOOSE',
+battleTag:'PRACTICE MODE · BATTLE',leave:'EXIT',you:'YOU',ai:'AI',stamina:'STAMINA',yourTurn:'YOUR TURN',aiTurn:"AI'S TURN",hint:'Choose a skill',begin:'The battle begins! Choose a skill.',damage:'damage',activated:'activated',counter:'Freeze Counter! The attack is punished.',win:'🏆 VICTORY! You won the battle.',lose:'💫 DEFEAT · The AI has won.',restart:'↻ RESTART',changeStyle:'CHANGE STYLE',battleMenu:'MAIN MENU',
+skills:{'Lusas Aéreas':'Air Blades','Onda Helada':'Frozen Wave','Lanza Glacial':'Glacial Spear','Freeze Counter':'Freeze Counter','Puño':'Punch','Fisiochoque':'Shockwave','Concentración':'Focus','Golpe de Gracia':'Finishing Blow'},
+desc:{'Lusas Aéreas':'20 damage','Onda Helada':'25 damage','Lanza Glacial':'35 damage','Freeze Counter':'Prepare a counter','Puño':'10 damage','Fisiochoque':'15 damage + power up','Concentración':'Blocks 15 damage','Golpe de Gracia':'30 damage · enemy ≤30 HP'}
+}};
+let language='es',theme='dark',player=null,enemy=null,playerStyle='Windment',playerTurn=true,busy=false,ended=false;
+const SCENES=['scene-flowers','scene-lava','scene-snow','scene-coliseum','scene-forest','scene-haunted'];
+let sceneIndex=0,sceneTimer=null;
+function setScene(index){sceneIndex=index;const menu=$('menuScreen');if(!menu)return;menu.classList.remove(...SCENES);menu.classList.add(SCENES[sceneIndex]);}
+function startSceneCycle(){if(sceneTimer)clearInterval(sceneTimer);sceneIndex=0;setScene(sceneIndex);sceneTimer=setInterval(()=>{if($('menuScreen').classList.contains('active'))setScene((sceneIndex+1)%SCENES.length)},6000);}
+
+
+const $=id=>document.getElementById(id);
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo(0,0);if(id==='menuScreen')startSceneCycle();else if(sceneTimer){clearInterval(sceneTimer);sceneTimer=null}}
+function chooseLanguage(lang){language=lang;applyLanguage();showScreen('menuScreen')}
+function setLanguage(lang){language=lang;applyLanguage()}
+function setTheme(value){theme=value;document.body.classList.toggle('light',theme==='light');applyLanguage()}
+function applyLanguage(){
+ const t=TEXT[language];document.documentElement.lang=language;
+ $('menuLanguage').textContent=language==='es'?'ESPAÑOL':'ENGLISH';
+ const map={menuTitle:'menuTitle',menuSubtitle:'menuSubtitle',storyName:'story',invName:'inventory',modesName:'modes',storyDesc:'storyDesc',invDesc:'invDesc',modesDesc:'modesDesc',practiceName:'practice',practiceDesc:'practiceDesc',infoName:'info',infoDesc:'infoDesc',menuFooter:'footer',infoTag:'infoTag',infoHeading:'info',themeTitle:'theme',themeText:'themeText',darkBtn:'dark',lightBtn:'light',languageTitle:'language',languageText:'languageText',guideTitle:'guide',practiceTag:'practiceTag',chooseStyleTitle:'chooseStyle',chooseStyleDesc:'chooseStyleDesc',windDesc:'windDesc',fighterDesc:'fighterDesc',chooseWind:'choose',chooseFighter:'choose',battleTag:'battleTag',leaveBattle:'leave',staminaLabel:'stamina',enemyStaminaLabel:'stamina',restartBtn:'restart',backStylesBtn:'changeStyle',battleMenuBtn:'battleMenu',infoBackTop:'back',infoBack:'backMenu',practiceBack:'back'};
+ for(const [id,key] of Object.entries(map))if($(id))$(id).textContent=t[key];
+ ['storyLock','invLock','modesLock'].forEach(id=>$(id).textContent=t.locked);
+ $('guideList').innerHTML=t.guideItems.map(s=>'<li>'+s+'</li>').join('');
+ $('esBtn').classList.toggle('selected',language==='es');$('enBtn').classList.toggle('selected',language==='en');
+ $('darkBtn').classList.toggle('selected',theme==='dark');$('lightBtn').classList.toggle('selected',theme==='light');
+ if(player&&enemy)renderBattle();
+}
+function openInfo(){applyLanguage();showScreen('infoScreen')}
+function pixelWind(){return `<svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<!-- long auburn hair and side locks -->
+<rect x="7" y="1" width="10" height="3" fill="#59372f"/><rect x="5" y="3" width="3" height="9" fill="#704638"/><rect x="16" y="3" width="3" height="11" fill="#704638"/><rect x="4" y="8" width="2" height="8" fill="#59372f"/><rect x="18" y="9" width="2" height="7" fill="#59372f"/>
+<!-- face, eyes, fringe -->
+<rect x="8" y="4" width="8" height="7" fill="#f1c6a5"/><rect x="7" y="6" width="1" height="4" fill="#f1c6a5"/><rect x="16" y="6" width="1" height="4" fill="#f1c6a5"/><rect x="8" y="4" width="3" height="2" fill="#59372f"/><rect x="12" y="4" width="4" height="2" fill="#59372f"/><rect x="9" y="7" width="2" height="1" fill="#24364b"/><rect x="13" y="7" width="2" height="1" fill="#24364b"/><rect x="11" y="9" width="2" height="1" fill="#d88a88"/>
+<!-- teal hair ornament -->
+<rect x="6" y="3" width="4" height="2" fill="#67d9e8"/><rect x="5" y="2" width="2" height="3" fill="#b4f5ff"/>
+<!-- elegant coat -->
+<rect x="7" y="11" width="10" height="9" fill="#e8f6f8"/><rect x="5" y="12" width="3" height="6" fill="#7ad4e7"/><rect x="16" y="12" width="3" height="6" fill="#7ad4e7"/><rect x="10" y="11" width="4" height="8" fill="#ffffff"/><rect x="8" y="17" width="8" height="3" fill="#3196b8"/><rect x="11" y="12" width="2" height="5" fill="#9ce8f2"/>
+<!-- sleeves, hands -->
+<rect x="4" y="13" width="3" height="6" fill="#6cc7df"/><rect x="17" y="13" width="3" height="5" fill="#6cc7df"/><rect x="4" y="18" width="3" height="2" fill="#f1c6a5"/><rect x="17" y="17" width="3" height="2" fill="#f1c6a5"/>
+<!-- sash and split skirt -->
+<rect x="7" y="20" width="10" height="2" fill="#f5d982"/><rect x="7" y="22" width="4" height="5" fill="#e8f6f8"/><rect x="13" y="22" width="4" height="5" fill="#b5e8ef"/><rect x="10" y="22" width="3" height="5" fill="#4ca7c5"/>
+<!-- boots -->
+<rect x="7" y="27" width="4" height="3" fill="#4b7188"/><rect x="13" y="27" width="4" height="3" fill="#4b7188"/><rect x="6" y="30" width="5" height="2" fill="#283e58"/><rect x="13" y="30" width="5" height="2" fill="#283e58"/>
+<!-- unmistakable open folding fan, with ribs and handle -->
+<rect x="19" y="17" width="2" height="5" fill="#f1c6a5"/><path d="M19 18 L17 9 L20 5 L23 8 L24 17 Z" fill="#b9f3ff" stroke="#267d9a" stroke-width=".8"/><path d="M20 18 L18 9 M20 18 L20 6 M20 18 L23 9 M20 18 L24 15" stroke="#328fab" stroke-width=".7"/><rect x="20" y="17" width="1" height="4" fill="#f0d88a"/>
+</svg>`}
+function pixelFighter(){return `<svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<!-- spiky black hair -->
+<rect x="7" y="2" width="11" height="3" fill="#202238"/><rect x="6" y="4" width="3" height="6" fill="#2d3048"/><rect x="16" y="4" width="3" height="6" fill="#202238"/><rect x="8" y="1" width="3" height="2" fill="#393b55"/><rect x="15" y="1" width="3" height="2" fill="#393b55"/>
+<!-- face -->
+<rect x="8" y="5" width="9" height="7" fill="#d99c78"/><rect x="7" y="7" width="1" height="3" fill="#d99c78"/><rect x="9" y="8" width="2" height="1" fill="#20263a"/><rect x="14" y="8" width="2" height="1" fill="#20263a"/><rect x="11" y="10" width="3" height="1" fill="#9b594e"/>
+<!-- red ninja bandana and trailing tails -->
+<rect x="6" y="5" width="12" height="2" fill="#dc4056"/><rect x="7" y="6" width="3" height="1" fill="#ff7a7e"/><rect x="17" y="5" width="4" height="2" fill="#dc4056"/><rect x="20" y="6" width="2" height="4" fill="#dc4056"/>
+<!-- dark gi, red chest mark -->
+<rect x="7" y="12" width="11" height="9" fill="#292e45"/><rect x="9" y="13" width="7" height="5" fill="#8f263e"/><rect x="11" y="13" width="3" height="6" fill="#e54c5e"/><rect x="8" y="19" width="9" height="2" fill="#424963"/>
+<!-- broad shoulders, forearms and fists -->
+<rect x="4" y="13" width="4" height="6" fill="#343a55"/><rect x="2" y="17" width="4" height="3" fill="#d99c78"/><rect x="17" y="13" width="4" height="6" fill="#343a55"/><rect x="19" y="17" width="4" height="3" fill="#d99c78"/><rect x="3" y="18" width="3" height="2" fill="#f0b28b"/><rect x="20" y="18" width="3" height="2" fill="#f0b28b"/>
+<!-- belt, trousers, shin wraps and boots -->
+<rect x="7" y="21" width="11" height="2" fill="#edc75c"/><rect x="11" y="21" width="3" height="2" fill="#fff0a1"/><rect x="8" y="23" width="4" height="5" fill="#282d43"/><rect x="14" y="23" width="4" height="5" fill="#282d43"/><rect x="8" y="27" width="4" height="2" fill="#8d9aae"/><rect x="14" y="27" width="4" height="2" fill="#8d9aae"/><rect x="7" y="29" width="5" height="3" fill="#161d30"/><rect x="14" y="29" width="5" height="3" fill="#161d30"/>
+<!-- shoulder insignia -->
+<rect x="5" y="13" width="2" height="2" fill="#e8c75b"/><rect x="18" y="13" width="2" height="2" fill="#e8c75b"/>
+</svg>`}
+$('windPreview').innerHTML=pixelWind();$('fighterPreview').innerHTML=pixelFighter();
+const defs={Windment:{max:3,regen:2,skills:[['Lusas Aéreas',1,20,'wind'],['Onda Helada',2,25,'ice'],['Lanza Glacial',3,35,'ice'],['Freeze Counter',3,0,'counter']]},Fighter:{max:6,regen:2,skills:[['Puño',1,10,'physical'],['Fisiochoque',3,15,'shock'],['Concentración',3,0,'defend'],['Golpe de Gracia',5,30,'physical','execute']]}};
+function make(style){return{style,hp:150,st:defs[style].max,max:defs[style].max,regen:2,def:0,bonus:0,counter:false}}
+function startBattle(style){playerStyle=style;resetBattle();showScreen('battleScreen')}
+function resetBattle(){player=make(playerStyle);enemy=make(playerStyle==='Windment'?'Fighter':'Windment');playerTurn=true;busy=false;ended=false;$('playerSprite').innerHTML=pixelFor(player.style)+'<div class="label" id="playerLabel">'+player.style.toUpperCase()+'</div>';$('enemySprite').innerHTML=pixelFor(enemy.style)+'<div class="label" id="enemyLabel">'+enemy.style.toUpperCase()+' · '+TEXT[language].ai+'</div>';$('battleLog').textContent=TEXT[language].begin;$('battleResult').style.display='none';$('playerSprite').classList.remove('hit');$('enemySprite').classList.remove('hit');renderBattle()}
+function pixelFor(style){return style==='Windment'?pixelWind():pixelFighter()}
+function renderBattle(){if(!player||!enemy)return;const t=TEXT[language];for(const [obj,prefix] of [[player,'player'],[enemy,'enemy']]){$(prefix+'HpBar').style.width=Math.max(0,obj.hp/150*100)+'%';$(prefix+'HpText').textContent=obj.hp+' / 150 HP';$(prefix+'StBar').style.width=obj.st/obj.max*100+'%';$(prefix+'StText').textContent=obj.st+' / '+obj.max}
+$('playerName').textContent=(language==='es'?'TÚ · ':'YOU · ')+player.style;$('enemyName').textContent=t.ai+' · '+enemy.style;$('playerLabel').textContent=player.style.toUpperCase();$('enemyLabel').textContent=enemy.style.toUpperCase()+' · '+t.ai;$('turnText').textContent=ended?(language==='es'?'COMBATE TERMINADO':'BATTLE OVER'):playerTurn?t.yourTurn:t.aiTurn;$('battleHint').textContent=ended?'':t.hint;renderActions()}
+function renderActions(){const box=$('actionButtons'),t=TEXT[language];box.innerHTML='';if(!player||ended)return;defs[player.style].skills.forEach(sk=>{const [name,cost,dmg,type,extra]=sk,b=document.createElement('button');b.className='action';b.disabled=busy||!playerTurn||player.st<cost||(extra==='execute'&&enemy.hp>30);b.innerHTML=t.skills[name]+'<small>'+t.desc[name]+' · '+cost+' '+t.stamina+'</small>';b.onclick=()=>useSkill(player,enemy,sk,true);box.appendChild(b)})}
+function logBattle(message){$('battleLog').textContent=message}
+function animateAttack(type,isPlayer,done){const target=$(isPlayer?'enemySprite':'playerSprite');if(type==='wind'||type==='ice'){const p=document.createElement('div');p.className='projectile';p.textContent=type==='wind'?'🌀':'❄';if(!isPlayer){p.style.left='auto';p.style.right='18%';p.style.animation='none';p.animate([{right:'18%',opacity:1},{right:'78%',opacity:.2}],{duration:700,easing:'steps(7)'}).onfinish=()=>p.remove()}$('battlefield').appendChild(p);setTimeout(()=>{p.remove();target.classList.add('hit');setTimeout(()=>{target.classList.remove('hit');done()},250)},700)}else{const source=$(isPlayer?'playerSprite':'enemySprite');source.style.transform=isPlayer?'translateX(12px)':'scaleX(-1) translateX(12px)';setTimeout(()=>{source.style.transform='';target.classList.add('hit');setTimeout(()=>{target.classList.remove('hit');done()},250)},220)}}
+function useSkill(att,def,sk,isPlayer){if(busy||ended)return;const [name,cost,dmg,type,extra]=sk;if(att.st<cost||(extra==='execute'&&def.hp>30))return;busy=true;att.st-=cost;let actual=dmg+(att.bonus||0);att.bonus=0;if(name==='Fisiochoque')att.bonus=5;if(name==='Concentración')att.def=15;if(name==='Freeze Counter')att.counter=true;animateAttack(type,isPlayer,()=>{const t=TEXT[language];if(actual>0){const blocked=Math.min(def.def||0,actual);const hit=Math.max(0,actual-(def.def||0));def.def=0;def.hp=Math.max(0,def.hp-hit);if(def.counter){att.hp=Math.max(0,att.hp-10);def.counter=false;logBattle(t.counter)}else logBattle(t.skills[name]+' · '+hit+' '+t.damage+(blocked?' ('+blocked+' bloqueado)':''))}else logBattle(t.skills[name]+' '+t.activated);renderBattle();if(checkEnd()){busy=false;renderBattle();return}setTimeout(()=>{if(isPlayer){playerTurn=false;enemy.st=Math.min(enemy.max,enemy.st+enemy.regen);busy=false;renderBattle();setTimeout(aiTurn,500)}else{playerTurn=true;player.st=Math.min(player.max,player.st+player.regen);busy=false;renderBattle()}},280)})}
+function aiTurn(){if(ended||busy)return;let list=defs[enemy.style].skills.filter(s=>enemy.st>=s[1]&&(s[4]!=='execute'||player.hp<=30));let pick;if(enemy.style==='Windment'){pick=list.find(s=>s[0]==='Lanza Glacial')||list.find(s=>s[0]==='Onda Helada')||list.find(s=>s[0]==='Lusas Aéreas')||list.find(s=>s[0]==='Freeze Counter')}else{pick=list.find(s=>s[0]==='Golpe de Gracia')||list.find(s=>s[0]==='Fisiochoque')||list.find(s=>s[0]==='Puño')||list.find(s=>s[0]==='Concentración')}if(!pick){enemy.st=Math.min(enemy.max,enemy.st+enemy.regen);pick=defs[enemy.style].skills.find(s=>s[1]<=enemy.st)}if(pick)useSkill(enemy,player,pick,false);else{playerTurn=true;busy=false;renderBattle()}}
+function checkEnd(){if(player.hp<=0||enemy.hp<=0){ended=true;busy=false;$('battleResult').style.display='block';$('battleResult').textContent=player.hp>0?TEXT[language].win:TEXT[language].lose;renderBattle();return true}return false}
+applyLanguage();
+</script></body></html>
